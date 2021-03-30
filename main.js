@@ -13,6 +13,7 @@ function templateHTML(title, lists, body) {
 		<body>
 			<h1><a href="/?id=WEB">WEB</a></h1>
 				${lists}
+				<a href="/create">Create</a>
 				${body}
 		</body>
 		</html>
@@ -37,6 +38,7 @@ var app = http.createServer((request, response) => {
 	var pathname = url.parse(_url, true).pathname;
 	// console.log(url.parse(_url, true));
 	// console.log(request.url);
+	// console.log(pathname);
 	if (pathname === '/') {
 		if (queryData.id === undefined) {
 			let title = 'Welcome';
@@ -59,6 +61,23 @@ var app = http.createServer((request, response) => {
 				}); //queryData.id로 data폴더 하위 파일을 읽어옴.
 			});
 		}
+	} else if (pathname === '/create') {
+		let title = 'Edit';
+		fs.readdir('./data', (err, files) => {
+			let lists = FileList(files);
+			let template = templateHTML(
+				title,
+				lists,
+				`<form action="http://localhost:3000/process_create" method="post">
+				<p><input type="text" name="title" placeholder="title"/></p>
+				<p><textarea name="description" placeholder="description"></textarea></p>
+				<p><input type="submit" /></p>
+				</form>
+				`,
+			);
+			response.writeHead(200);
+			response.end(template);
+		});
 	} else {
 		response.writeHead(404);
 		response.end('404 Not found');
