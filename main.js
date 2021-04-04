@@ -2,7 +2,7 @@ var http = require('http');
 var fs = require('fs');
 var url = require('url');
 var qs = require('querystring');
-const testFolder = './data';
+const dataList = './data';
 
 function templateHTML(title, lists, body) {
 	return `<!doctype html>
@@ -24,7 +24,7 @@ function templateHTML(title, lists, body) {
 function FileList(files) {
 	let i = 0;
 	var lists = '<ul>'; // console.log(files);
-	while (i < 3) {
+	while (i < dataList.length) {
 		let filelist = files[i]; // console.log(filelist);
 		lists = lists + `<li><a href="/?id=${filelist}">${filelist}</a></li>`; //반복 할 때 마다 전에 할당한 <li>를 재할당
 		i = i + 1;
@@ -59,7 +59,7 @@ var app = http.createServer((request, response) => {
 					let template = templateHTML(title, lists, `<h2>${title}</h2><p>${description}</p>`);
 					response.writeHead(200);
 					response.end(template);
-				}); //queryData.id로 data폴더 하위 파일을 읽어옴.
+				}); //queryData.id로 data폴더 하위 파일 read
 			});
 		}
 	} else if (pathname === '/create') {
@@ -74,7 +74,7 @@ var app = http.createServer((request, response) => {
 				<p><textarea name="description" placeholder="description"></textarea></p>
 				<p><input type="submit" /></p>
 				</form>
-				`,
+				`, //title, description post형식으로 전송
 			);
 			response.writeHead(200);
 			response.end(template);
@@ -88,10 +88,12 @@ var app = http.createServer((request, response) => {
 			let post = qs.parse(body);
 			let title = post.title;
 			let description = post.description;
-			console.log(post);
+			fs.writeFile(`data/${title}`, description, 'utf8', (err) => {
+				response.writeHead(302, { Location: `/?id=${title}` });
+				response.end();
+			});
+			// console.log(post);
 		});
-		response.writeHead(200);
-		response.end('SUCCESS');
 	} else {
 		response.writeHead(404);
 		response.end('404 Not found');
