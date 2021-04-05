@@ -4,7 +4,7 @@ var url = require('url');
 var qs = require('querystring');
 const dataList = './data';
 
-function templateHTML(title, lists, body) {
+function templateHTML(title, lists, body, control) {
 	return `<!doctype html>
 		<html>
 		<head>
@@ -12,9 +12,9 @@ function templateHTML(title, lists, body) {
 			<meta charset="utf-8">
 		</head>
 		<body>
-			<h1><a href="/?id=WEB">WEB</a></h1>
+			<h1><a href="/">WEB</a></h1>
 				${lists}
-				<a href="/create">Create</a>
+				${control}
 				${body}
 		</body>
 		</html>
@@ -46,7 +46,7 @@ var app = http.createServer((request, response) => {
 			var description = 'Hello, Node.js ^^'; //서버시작 후, description에 본문 생성.
 			fs.readdir('./data', (err, files) => {
 				let lists = FileList(files);
-				let template = templateHTML(title, lists, `<h2>${title}</h2><p>${description}</p>`);
+				let template = templateHTML(title, lists, `<h2>${title}</h2><p>${description}</p>`, `<a href="/create">Create</a>`);
 				response.writeHead(200);
 				response.end(template);
 			});
@@ -56,7 +56,7 @@ var app = http.createServer((request, response) => {
 				fs.readFile(`data/${queryData.id}`, 'utf8', (err, description) => {
 					//queryData.id와 일치하는 변수 파일
 					let title = queryData.id; //http://localhost:3000/?id=ㅁㅁㅁ,	만약 id가 아닌 name이라면 name으로 입력
-					let template = templateHTML(title, lists, `<h2>${title}</h2><p>${description}</p>`);
+					let template = templateHTML(title, lists, `<h2>${title}</h2><p>${description}</p>`, `<a href="/create">Create</a> <a href="/update">Update</a>`);
 					response.writeHead(200);
 					response.end(template);
 				}); //queryData.id로 data폴더 하위 파일 read
