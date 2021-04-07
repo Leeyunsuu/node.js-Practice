@@ -46,7 +46,12 @@ var app = http.createServer((request, response) => {
 			var description = 'Hello, Node.js ^^'; //서버시작 후, description에 본문 생성.
 			fs.readdir('./data', (err, files) => {
 				let lists = FileList(files);
-				let template = templateHTML(title, lists, `<h2>${title}</h2><p>${description}</p>`, `<a href="/create">Create</a>`);
+				let template = templateHTML(
+					title,
+					lists,
+					`<h2>${title}</h2><p>${description}</p>`,
+					`<a href="/create">Create</a>`,
+				);
 				response.writeHead(200);
 				response.end(template);
 			});
@@ -56,25 +61,33 @@ var app = http.createServer((request, response) => {
 				fs.readFile(`data/${queryData.id}`, 'utf8', (err, description) => {
 					//queryData.id와 일치하는 변수 파일
 					let title = queryData.id; //http://localhost:3000/?id=ㅁㅁㅁ,	만약 id가 아닌 name이라면 name으로 입력
-					let template = templateHTML(title, lists, `<h2>${title}</h2><p>${description}</p>`, `<a href="/create">Create</a> <a href="/update">Update</a>`);
+					console.log(title);
+					let template = templateHTML(
+						title,
+						lists,
+						`<h2>${title}</h2><p>${description}</p>`,
+						`<a href="/create">Create</a> <a href="/update?id=${title}">Update</a>`,
+					);
 					response.writeHead(200);
 					response.end(template);
 				}); //queryData.id로 data폴더 하위 파일 read
 			});
 		}
 	} else if (pathname === '/create') {
-		let title = 'Edit';
 		fs.readdir('./data', (err, files) => {
+			//./data/파일 목록 호출
+			let title = 'Edit';
 			let lists = FileList(files);
 			let template = templateHTML(
 				title,
 				lists,
-				`<form action="http://localhost:3000/create_process" method="post">
+				`<form action="/create_process" method="post">
 				<p><input type="text" name="title" placeholder="title"/></p>
 				<p><textarea name="description" placeholder="description"></textarea></p>
 				<p><input type="submit" /></p>
 				</form>
 				`, //title, description post형식으로 전송
+				`<a href="/create">Create</a>`,
 			);
 			response.writeHead(200);
 			response.end(template);
@@ -85,7 +98,7 @@ var app = http.createServer((request, response) => {
 			body += data;
 		});
 		request.on('end', () => {
-			let post = qs.parse(body);
+			// let post = qs.parse(body);
 			let title = post.title;
 			let description = post.description;
 			fs.writeFile(`data/${title}`, description, 'utf8', (err) => {
@@ -94,6 +107,32 @@ var app = http.createServer((request, response) => {
 			});
 			// console.log(post);
 		});
+	} else if (pathname === '/update') {
+		fs.readdir('./data', (err, files) => {
+			let lists = FileList(files);
+			fs.readFile(`data/${queryData.id}`, 'utf8', (err, description) => {
+				//queryData.id와 일치하는 변수 파일
+				let title = queryData.id; //만약 id가 아닌 name이라면 name으로 입력
+				console.log(queryData.id);
+				let template = templateHTML(
+					title,
+					lists,
+					`<form action="/update_process" method="post">
+				<p><input type="hidden" name="id" value=${title}></p>
+				<p><input type="text" name="title" placeholder="title" value=${title}></p>
+				<p><textarea name="description" placeholder="description">${description}</textarea></p>
+				<p><input type="submit" /></p>
+				</form>
+				`,
+					`<a href="/create">Create</a> <a href="/update?id=${title}">Update</a>`,
+				);
+				response.writeHead(200);
+				response.end(template);
+			}); //queryData.id로 data폴더 하위 파일 read
+		});
+	} else if (pathname === '/update_process') {
+		response.writeHead(200);
+		response.end('SUCCES');
 	} else {
 		response.writeHead(404);
 		response.end('404 Not found');
