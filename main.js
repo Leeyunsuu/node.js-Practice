@@ -131,8 +131,24 @@ var app = http.createServer((request, response) => {
 			}); //queryData.id로 data폴더 하위 파일 read
 		});
 	} else if (pathname === '/update_process') {
-		response.writeHead(200);
-		response.end('SUCCES');
+		let body = '';
+		request.on('data', (data) => {
+			body += data;
+		});
+		request.on('end', () => {
+			let post = qs.parse(body);
+			let id = post.id;
+			let title = post.title;
+			let description = post.description;
+			fs.rename(`data/${id}`, `data/${title}`, () => {
+				//file 이름 변경
+				fs.writeFile(`data/${title}`, description, 'utf8', (err) => {
+					// 글 덮어쓰기
+					response.writeHead(302, { Location: `/?id=${title}` });
+					response.end();
+				});
+			});
+		});
 	} else {
 		response.writeHead(404);
 		response.end('404 Not found');
