@@ -2,7 +2,6 @@ var http = require('http');
 var fs = require('fs');
 var url = require('url');
 var qs = require('querystring');
-const dataList = './data';
 
 function templateHTML(title, lists, body, control) {
 	return `<!doctype html>
@@ -21,12 +20,11 @@ function templateHTML(title, lists, body, control) {
 	`;
 }
 
-function FileList(files) {
+function templateList(files) {
 	let i = 0;
-	var lists = '<ul>'; // console.log(files);
-	while (i < dataList.length) {
-		let filelist = files[i]; // console.log(filelist);
-		lists = lists + `<li><a href="/?id=${filelist}">${filelist}</a></li>`; //반복 할 때 마다 전에 할당한 <li>를 재할당
+	let lists = '<ul>'; // console.log(files);
+	while (i < files.length) {
+		lists = lists + `<li><a href="/?id=${files[i]}">${files[i]}</a></li>`; //반복 할 때 마다 전에 할당한 <li>를 재할당
 		i = i + 1;
 	}
 	lists = lists + '</ul>';
@@ -43,9 +41,9 @@ var app = http.createServer((request, response) => {
 	if (pathname === '/') {
 		if (queryData.id === undefined) {
 			let title = 'Welcome';
-			var description = 'Hello, Node.js ^^'; //서버시작 후, description에 본문 생성.
+			let description = 'Hello, Node.js ^^'; //서버시작 후, description에 본문 생성.
 			fs.readdir('./data', (err, files) => {
-				let lists = FileList(files);
+				let lists = templateList(files);
 				let template = templateHTML(
 					title,
 					lists,
@@ -57,16 +55,20 @@ var app = http.createServer((request, response) => {
 			});
 		} else {
 			fs.readdir('./data', (err, files) => {
-				let lists = FileList(files);
 				fs.readFile(`data/${queryData.id}`, 'utf8', (err, description) => {
 					//queryData.id와 일치하는 변수 파일
 					let title = queryData.id; //http://localhost:3000/?id=ㅁㅁㅁ,	만약 id가 아닌 name이라면 name으로 입력
+					let lists = templateList(files);
 					console.log(title);
 					let template = templateHTML(
 						title,
 						lists,
 						`<h2>${title}</h2><p>${description}</p>`,
-						`<a href="/create">Create</a> <a href="/update?id=${title}">Update</a>`,
+						`<a href="/create">Create</a> <a href="/update?id=${title}">Update</a>
+						<form action="/delete_process" method="post">
+						<input type="hidden" name="id" value="${title}">
+						<input type="submit" value="delete">
+						</form>`,
 					);
 					response.writeHead(200);
 					response.end(template);
@@ -77,7 +79,7 @@ var app = http.createServer((request, response) => {
 		fs.readdir('./data', (err, files) => {
 			//./data/파일 목록 호출
 			let title = 'Edit';
-			let lists = FileList(files);
+			let lists = templateList(files);
 			let template = templateHTML(
 				title,
 				lists,
@@ -98,7 +100,7 @@ var app = http.createServer((request, response) => {
 			body += data;
 		});
 		request.on('end', () => {
-			// let post = qs.parse(body);
+			let post = qs.parse(body);
 			let title = post.title;
 			let description = post.description;
 			fs.writeFile(`data/${title}`, description, 'utf8', (err) => {
@@ -109,11 +111,11 @@ var app = http.createServer((request, response) => {
 		});
 	} else if (pathname === '/update') {
 		fs.readdir('./data', (err, files) => {
-			let lists = FileList(files);
+			let lists = templateList(files);
 			fs.readFile(`data/${queryData.id}`, 'utf8', (err, description) => {
 				//queryData.id와 일치하는 변수 파일
 				let title = queryData.id; //만약 id가 아닌 name이라면 name으로 입력
-				console.log(queryData.id);
+				// console.log(queryData.id);
 				let template = templateHTML(
 					title,
 					lists,
@@ -147,6 +149,20 @@ var app = http.createServer((request, response) => {
 					response.writeHead(302, { Location: `/?id=${title}` });
 					response.end();
 				});
+			});
+		});
+	} else if (pathname === '/delete_process') {
+		let body = '';
+		request.on('data', (data) => {
+			body += data;
+		});
+		request.on('end', () => {
+			let post = qs.parse(body);
+			let id = post.id;
+			fs.unlink(`data/${id}`, (error) => {
+				//글 삭제
+				response.writeHead(302, { Location: `/` });
+				response.end();
 			});
 		});
 	} else {
