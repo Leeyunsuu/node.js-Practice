@@ -118,8 +118,8 @@ var app = http.createServer((request, response) => {
 				// console.log(queryData.id);
 				let template = templateHTML(
 					title,
-					lists,
-					`<form action="/update_process" method="post">
+					lists, //textbox에 post로 전송.
+					`<form action="/update_process" method="post">	
 				<p><input type="hidden" name="id" value=${title}></p>
 				<p><input type="text" name="title" placeholder="title" value=${title}></p>
 				<p><textarea name="description" placeholder="description">${description}</textarea></p>
@@ -135,13 +135,14 @@ var app = http.createServer((request, response) => {
 	} else if (pathname === '/update_process') {
 		let body = '';
 		request.on('data', (data) => {
+			//post로 가져온 데이터 body에 추가.
 			body += data;
-		});
-		request.on('end', () => {
+			request.on('end', () => {});
 			let post = qs.parse(body);
 			let id = post.id;
 			let title = post.title;
 			let description = post.description;
+			console.log(post);
 			fs.rename(`data/${id}`, `data/${title}`, () => {
 				//file 이름 변경
 				fs.writeFile(`data/${title}`, description, 'utf8', (err) => {
@@ -154,6 +155,7 @@ var app = http.createServer((request, response) => {
 	} else if (pathname === '/delete_process') {
 		let body = '';
 		request.on('data', (data) => {
+			//post로 가져온 데이터 body에 추가.
 			body += data;
 		});
 		request.on('end', () => {
