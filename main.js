@@ -2,9 +2,12 @@ var http = require('http');
 var fs = require('fs');
 var url = require('url');
 var qs = require('querystring');
+var template = require('./lib/template.js');
 
-function templateHTML(title, lists, body, control) {
-	return `<!doctype html>
+/*
+let template = {
+	HTML: function (title, lists, body, control) {
+		return `<!doctype html>
 		<html>
 		<head>
 			<title>WEB1 - ${title}</title>
@@ -18,18 +21,19 @@ function templateHTML(title, lists, body, control) {
 		</body>
 		</html>
 	`;
-}
-
-function templateList(files) {
-	let i = 0;
-	let lists = '<ul>'; // console.log(files);
-	while (i < files.length) {
-		lists = lists + `<li><a href="/?id=${files[i]}">${files[i]}</a></li>`; //반복 할 때 마다 전에 할당한 <li>를 재할당
-		i = i + 1;
-	}
-	lists = lists + '</ul>';
-	return lists;
-}
+	},
+	list: function (files) {
+		let i = 0;
+		let lists = '<ul>'; // console.log(files);
+		while (i < files.length) {
+			lists = lists + `<li><a href="/?id=${files[i]}">${files[i]}</a></li>`; //반복 할 때 마다 전에 할당한 <li>를 재할당
+			i = i + 1;
+		}
+		lists = lists + '</ul>';
+		return lists;
+	},
+};
+*/
 
 var app = http.createServer((request, response) => {
 	var _url = request.url;
@@ -43,24 +47,24 @@ var app = http.createServer((request, response) => {
 			let title = 'Welcome';
 			let description = 'Hello, Node.js ^^'; //서버시작 후, description에 본문 생성.
 			fs.readdir('./data', (err, files) => {
-				let lists = templateList(files);
-				let template = templateHTML(
+				let lists = template.list(files);
+				let html = template.HTML(
 					title,
 					lists,
 					`<h2>${title}</h2><p>${description}</p>`,
 					`<a href="/create">Create</a>`,
 				);
 				response.writeHead(200);
-				response.end(template);
+				response.end(html);
 			});
 		} else {
 			fs.readdir('./data', (err, files) => {
 				fs.readFile(`data/${queryData.id}`, 'utf8', (err, description) => {
 					//queryData.id와 일치하는 변수 파일
 					let title = queryData.id; //http://localhost:3000/?id=ㅁㅁㅁ,	만약 id가 아닌 name이라면 name으로 입력
-					let lists = templateList(files);
+					let lists = template.list(files);
 					console.log(title);
-					let template = templateHTML(
+					let html = template.HTML(
 						title,
 						lists,
 						`<h2>${title}</h2><p>${description}</p>`,
@@ -71,7 +75,7 @@ var app = http.createServer((request, response) => {
 						</form>`,
 					);
 					response.writeHead(200);
-					response.end(template);
+					response.end(html);
 				}); //queryData.id로 data폴더 하위 파일 read
 			});
 		}
@@ -79,8 +83,8 @@ var app = http.createServer((request, response) => {
 		fs.readdir('./data', (err, files) => {
 			//./data/파일 목록 호출
 			let title = 'Edit';
-			let lists = templateList(files);
-			let template = templateHTML(
+			let lists = template.list(files);
+			let html = template.HTML(
 				title,
 				lists,
 				`<form action="/create_process" method="post">
@@ -92,7 +96,7 @@ var app = http.createServer((request, response) => {
 				`<a href="/create">Create</a>`,
 			);
 			response.writeHead(200);
-			response.end(template);
+			response.end(html);
 		});
 	} else if (pathname === '/create_process') {
 		let body = '';
@@ -111,12 +115,12 @@ var app = http.createServer((request, response) => {
 		});
 	} else if (pathname === '/update') {
 		fs.readdir('./data', (err, files) => {
-			let lists = templateList(files);
+			let lists = template.list(files);
 			fs.readFile(`data/${queryData.id}`, 'utf8', (err, description) => {
 				//queryData.id와 일치하는 변수 파일
 				let title = queryData.id; //만약 id가 아닌 name이라면 name으로 입력
 				// console.log(queryData.id);
-				let template = templateHTML(
+				let html = template.HTML(
 					title,
 					lists, //textbox에 post로 전송.
 					`<form action="/update_process" method="post">	
@@ -129,7 +133,7 @@ var app = http.createServer((request, response) => {
 					`<a href="/create">Create</a> <a href="/update?id=${title}">Update</a>`,
 				);
 				response.writeHead(200);
-				response.end(template);
+				response.end(html);
 			}); //queryData.id로 data폴더 하위 파일 read
 		});
 	} else if (pathname === '/update_process') {
