@@ -4,7 +4,7 @@ var url = require('url');
 var qs = require('querystring');
 var template = require('./lib/template.js');
 
-/*
+/*  기존 template
 let template = {
 	HTML: function (title, lists, body, control) {
 		return `<!doctype html>
@@ -36,13 +36,14 @@ let template = {
 */
 
 var app = http.createServer((request, response) => {
-	var _url = request.url;
-	var queryData = url.parse(_url, true).query;
-	var pathname = url.parse(_url, true).pathname;
-	// console.log(url.parse(_url, true));
-	// console.log(request.url);
+	let _url = request.url;
+	let queryData = url.parse(_url, true).query;
+	let pathname = url.parse(_url, true).pathname;
+	console.log(url.parse(_url, true));
+	console.log(request.url);
 	// console.log(pathname);
 	if (pathname === '/') {
+		//Home화면
 		if (queryData.id === undefined) {
 			let title = 'Welcome';
 			let description = 'Hello, Node.js ^^'; //서버시작 후, description에 본문 생성.
