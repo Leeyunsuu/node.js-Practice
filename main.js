@@ -1,46 +1,16 @@
-var http = require('http');
-var fs = require('fs');
-var url = require('url');
-var qs = require('querystring');
+const http = require('http');
+const fs = require('fs');
+const url = require('url');
+const qs = require('querystring');
+const path = require('path');
 var template = require('./lib/template.js');
-
-/*  기존 template
-let template = {
-	HTML: function (title, lists, body, control) {
-		return `<!doctype html>
-		<html>
-		<head>
-			<title>WEB1 - ${title}</title>
-			<meta charset="utf-8">
-		</head>
-		<body>
-			<h1><a href="/">WEB</a></h1>
-				${lists}
-				${control}
-				${body}
-		</body>
-		</html>
-	`;
-	},
-	list: function (files) {
-		let i = 0;
-		let lists = '<ul>'; // console.log(files);
-		while (i < files.length) {
-			lists = lists + `<li><a href="/?id=${files[i]}">${files[i]}</a></li>`; //반복 할 때 마다 전에 할당한 <li>를 재할당
-			i = i + 1;
-		}
-		lists = lists + '</ul>';
-		return lists;
-	},
-};
-*/
 
 var app = http.createServer((request, response) => {
 	let _url = request.url;
 	let queryData = url.parse(_url, true).query;
 	let pathname = url.parse(_url, true).pathname;
-	console.log(url.parse(_url, true));
-	console.log(request.url);
+	// console.log(url.parse(_url, true));
+	// console.log(request.url);
 	// console.log(pathname);
 	if (pathname === '/') {
 		//Home화면
@@ -59,8 +29,9 @@ var app = http.createServer((request, response) => {
 				response.end(html);
 			});
 		} else {
+			const filteredId = path.parse(queryData.id).base;
 			fs.readdir('./data', (err, files) => {
-				fs.readFile(`data/${queryData.id}`, 'utf8', (err, description) => {
+				fs.readFile(`data/${filteredId}`, 'utf8', (err, description) => {
 					//queryData.id와 일치하는 변수 파일
 					let title = queryData.id; //http://localhost:3000/?id=ㅁㅁㅁ,	만약 id가 아닌 name이라면 name으로 입력
 					let lists = template.list(files);
@@ -117,7 +88,8 @@ var app = http.createServer((request, response) => {
 	} else if (pathname === '/update') {
 		fs.readdir('./data', (err, files) => {
 			let lists = template.list(files);
-			fs.readFile(`data/${queryData.id}`, 'utf8', (err, description) => {
+			const filteredId = path.parse(queryData.id).base;
+			fs.readFile(`data/${filteredId}`, 'utf8', (err, description) => {
 				//queryData.id와 일치하는 변수 파일
 				let title = queryData.id; //만약 id가 아닌 name이라면 name으로 입력
 				// console.log(queryData.id);
@@ -166,7 +138,8 @@ var app = http.createServer((request, response) => {
 		request.on('end', () => {
 			let post = qs.parse(body);
 			let id = post.id;
-			fs.unlink(`data/${id}`, (error) => {
+			const filteredId = path.parse(id).base;
+			fs.unlink(`data/${filteredId}`, (error) => {
 				//글 삭제
 				response.writeHead(302, { Location: `/` });
 				response.end();
