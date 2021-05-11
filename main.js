@@ -4,6 +4,7 @@ const url = require('url');
 const qs = require('querystring');
 const path = require('path');
 var template = require('./lib/template.js');
+const sanitizeHtml = require('sanitize-html');
 
 var app = http.createServer((request, response) => {
 	let _url = request.url;
@@ -35,14 +36,16 @@ var app = http.createServer((request, response) => {
 					//queryData.id와 일치하는 변수 파일
 					let title = queryData.id; //http://localhost:3000/?id=ㅁㅁㅁ,	만약 id가 아닌 name이라면 name으로 입력
 					let lists = template.list(files);
-					console.log(title);
+					const cleanTitle = sanitizeHtml(title);
+					const cleandescription = sanitizeHtml(description);
+					// console.log(title);
 					let html = template.HTML(
 						title,
 						lists,
-						`<h2>${title}</h2><p>${description}</p>`,
-						`<a href="/create">Create</a> <a href="/update?id=${title}">Update</a>
+						`<h2>${cleanTitle}</h2><p>${cleandescription}</p>`,
+						`<a href="/create">Create</a> <a href="/update?id=${cleandescription}">Update</a>
 						<form action="/delete_process" method="post">
-						<input type="hidden" name="id" value="${title}">
+						<input type="hidden" name="id" value="${cleanTitle}">
 						<input type="submit" value="delete">
 						</form>`,
 					);
@@ -78,7 +81,8 @@ var app = http.createServer((request, response) => {
 		request.on('end', () => {
 			let post = qs.parse(body);
 			let title = post.title;
-			let description = post.description;
+			const description = post.description;
+			const clean = sanitizeHtml(description);
 			fs.writeFile(`data/${title}`, description, 'utf8', (err) => {
 				response.writeHead(302, { Location: `/?id=${title}` });
 				response.end();
@@ -118,7 +122,8 @@ var app = http.createServer((request, response) => {
 			let post = qs.parse(body);
 			let id = post.id;
 			let title = post.title;
-			let description = post.description;
+			const description = post.description;
+			const clean = sanitizeHtml(description);
 			console.log(post);
 			fs.rename(`data/${id}`, `data/${title}`, () => {
 				//file 이름 변경
